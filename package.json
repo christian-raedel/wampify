@@ -1,0 +1,40 @@
+{
+  "name": "wampify",
+  "version": "0.1.0",
+  "description": "A websocket RPC and Pub/Sub implementation.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/christian-raedel/wampify.git"
+  },
+  "keywords": [
+    "websocket",
+    "rpc",
+    "pub/sub",
+    "ws"
+  ],
+  "author": "Christian Rädel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/christian-raedel/wampify/issues"
+  },
+  "homepage": "https://github.com/christian-raedel/wampify",
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "chai-spies": "^0.5.1",
+    "mocha": "^1.21.4"
+  },
+  "dependencies": {
+    "lodash": "^2.4.1",
+    "node-cconf": "git+https://github.com/christian-raedel/node-cconf.git",
+    "node-clogger": "git+https://github.com/christian-raedel/node-clogger.git",
+    "q": "^1.0.1",
+    "ws": "^0.4.32"
+  }
+}

@@ -11,7 +11,7 @@ chai.use(spies);
 
 var logger = new clogger.CLogger('tests');
 
-describe('WebsocketServer', function() {
+describe('Wampify', function() {
     it('should instanciates', function(done) {
         this.timeout(2000);
 
@@ -21,11 +21,11 @@ describe('WebsocketServer', function() {
         setTimeout(function() {
             server.close();
             done();
-        }, 1000);
+        }, 500);
     });
 });
 
-describe('WebSocketServer:RPC', function() {
+describe('Wampify:RPC', function() {
     this.timeout(3000);
 
     var server = null;
@@ -33,9 +33,7 @@ describe('WebSocketServer:RPC', function() {
     beforeEach(function() {
         server = new Server({
             port: 3000,
-            plugins: {
-                rpcdir: path.resolve(process.cwd(), 'lib/rprocs')
-            }
+            plugins: path.resolve(process.cwd(), 'lib/rprocs')
         });
     });
 
@@ -43,7 +41,7 @@ describe('WebSocketServer:RPC', function() {
         server.close();
         setTimeout(function() {
             done();
-        }, 2000);
+        }, 500);
     });
 
     it('should load plugins', function() {
@@ -82,7 +80,7 @@ describe('WebSocketServer:RPC', function() {
     });
 });
 
-describe('WebSocketServer:PUB/SUB', function() {
+describe('Wampify:PUB/SUB', function() {
     this.timeout(3000);
 
     var server = null;
@@ -95,7 +93,7 @@ describe('WebSocketServer:PUB/SUB', function() {
         server.close();
         setTimeout(function() {
             done();
-        }, 2000);
+        }, 500);
     });
 
     it('should add a new channel', function() {
@@ -185,6 +183,6 @@ describe('WebSocketServer:PUB/SUB', function() {
             expect(spyB).to.have.been.called.exactly(3);
             ws.close();
             done();
-        }, 2000);
+        }, 1000);
     });
 });

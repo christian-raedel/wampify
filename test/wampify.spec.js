@@ -4,12 +4,12 @@ var _ = require('lodash')
     , spies = require('chai-spies')
     , path = require('path')
     , WebSocket = require('ws')
-    , clogger = require('node-clogger')
-    , Wampify = require('../lib/wampify');
+    , CLogger = require('node-clogger')
+    , Wampify = require('../index');
 
 chai.use(spies);
 
-var logger = new clogger.CLogger('tests');
+var logger = new CLogger('tests');
 
 describe('Wampify', function() {
     it('should instanciates', function(done) {

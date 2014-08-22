@@ -16,14 +16,14 @@ docs:
 	@echo "************************"
 	@echo "* CREATE DOCUMENTATION *"
 	@echo "************************"
-	@./node_modules/.bin/jsdoc --recurse --destination ./doc lib/*.js README.md
+	@./node_modules/.bin/jsdoc --recurse --destination ./doc lib/*.js lib/rprocs/*.js README.md
 
 github.io:
 	@echo "************************"
 	@echo "* CREATE DOCUMENTATION *"
 	@echo "* FOR GITHUB.IO        *"
 	@echo "************************"
-	@./node_modules/.bin/jsdoc --recurse --destination ../christian-raedel.github.io/node-cstore lib/*.js README.md
+	@./node_modules/.bin/jsdoc --recurse --destination ../christian-raedel.github.io/wampify lib/*.js lib/rprocs/*.js README.md
 
 clean:
 	@echo "************************"

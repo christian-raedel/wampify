@@ -5,7 +5,7 @@ var _ = require('lodash')
     , path = require('path')
     , WebSocket = require('ws')
     , clogger = require('node-clogger')
-    , Server = require('../lib/server');
+    , Wampify = require('../lib/wampify');
 
 chai.use(spies);
 
@@ -15,8 +15,8 @@ describe('Wampify', function() {
     it('should instanciates', function(done) {
         this.timeout(2000);
 
-        var server = new Server({port: 3000});
-        expect(server).to.be.an.instanceof(Server);
+        var server = new Wampify({port: 3000});
+        expect(server).to.be.an.instanceof(Wampify);
 
         setTimeout(function() {
             server.close();
@@ -31,7 +31,7 @@ describe('Wampify:RPC', function() {
     var server = null;
 
     beforeEach(function() {
-        server = new Server({
+        server = new Wampify({
             port: 3000,
             plugins: path.resolve(process.cwd(), 'lib/rprocs')
         });
@@ -86,7 +86,7 @@ describe('Wampify:PUB/SUB', function() {
     var server = null;
 
     beforeEach(function() {
-        server = new Server({port: 3000});
+        server = new Wampify({port: 3000});
     });
 
     afterEach(function(done) {
@@ -98,7 +98,7 @@ describe('Wampify:PUB/SUB', function() {
 
     it('should add a new channel', function() {
         server = server.addChannel('test:echo', {ack: true});
-        expect(server).to.be.an.instanceof(Server);
+        expect(server).to.be.an.instanceof(Wampify);
         expect(server.channels).to.be.deep.equal({
             'test:echo': {
                 sockets: [],
@@ -111,7 +111,7 @@ describe('Wampify:PUB/SUB', function() {
 
     it('should remove an existing channel', function() {
         server = server.addChannel('test:echo').removeChannel('test:echo');
-        expect(server).to.be.an.instanceof(Server);
+        expect(server).to.be.an.instanceof(Wampify);
         expect(server.channels).to.be.deep.equal({});
     });
 
@@ -141,13 +141,16 @@ describe('Wampify:PUB/SUB', function() {
         server.addChannel('test:$inge', {ack: true});
         expect(server.channels['test:$inge']).to.be.ok;
 
-        var ws = new WebSocket('ws://localhost:3000');
+        var uri = 'ws://localhost:3000'
+            , ws = new WebSocket(uri)
+            , ws2 = new WebSocket(uri)
+            , i = 2743;
 
         function onopen() {
             ws.send(JSON.stringify(['SUB', 'test:$inge', 4327, {ack: true}]));
 
             setTimeout(function() {
-                ws.send(JSON.stringify(['PUB', 'test:$inge', 2743, {ack: true}, 'hello $inge']));
+                ws.send(JSON.stringify(['PUB', 'test:$inge', i++, {ack: true}, 'hello $inge']));
             }, 500);
         }
 
@@ -162,12 +165,18 @@ describe('Wampify:PUB/SUB', function() {
             if (data[0] === 'ACK' && data[2] === 4327) {
                 logger.debug('Call 1');
                 expect(data).to.be.deep.equal(['ACK', 'test:$inge', 4327, {}, true]);
-            } else if (data[0] === 'PUB') {
-                logger.debug('Call 2');
+            } else if (data[0] === 'PUB' && data[2] === 2743) {
+                logger.debug('Call 2.1');
                 expect(data).to.be.deep.equal(['PUB', 'test:$inge', 2743, {}, 'hello $inge']);
+            } else if (data[0] === 'PUB' && data[2] === 2744) {
+                logger.debug('Call 2.2');
+                expect(data).to.be.deep.equal(['PUB', 'test:$inge', 2744, {}, 'hello $inge']);
             } else if (data[0] === 'ACK' && data[2] === 2743) {
-                logger.debug('Call 3');
+                logger.debug('Call 3.1');
                 expect(data).to.be.deep.equal(['ACK', 'test:$inge', 2743, {}, true]);
+            } else if (data[0] === 'ACK' && data[2] === 2744) {
+                logger.debug('Call 3.2');
+                expect(data).to.be.deep.equal(['ACK', 'test:$inge', 2744, {}, true]);
             } else {
                 done(new Error('Invalid response!'));
             }
@@ -177,11 +186,14 @@ describe('Wampify:PUB/SUB', function() {
             , spyB = chai.spy(onmessage);
         ws.on('open', spyA);
         ws.on('message', spyB);
+        ws2.on('open', spyA);
+        ws2.on('message', spyB);
 
         setTimeout(function() {
-            expect(spyA).to.have.been.called.once;
-            expect(spyB).to.have.been.called.exactly(3);
+            expect(spyA).to.have.been.called.twice;
+            expect(spyB).to.have.been.called.exactly(6);
             ws.close();
+            ws2.close();
             done();
         }, 1000);
     });

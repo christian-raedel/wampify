@@ -4,12 +4,17 @@ var _ = require('lodash')
     , spies = require('chai-spies')
     , path = require('path')
     , WebSocket = require('ws')
+    , clogger = require('node-clogger')
     , Server = require('../lib/server');
 
 chai.use(spies);
 
+var logger = new clogger.CLogger('tests');
+
 describe('WebsocketServer', function() {
     it('should instanciates', function(done) {
+        this.timeout(2000);
+
         var server = new Server({port: 3000});
         expect(server).to.be.an.instanceof(Server);
 
@@ -82,11 +87,11 @@ describe('WebSocketServer:PUB/SUB', function() {
 
     var server = null;
 
-    before(function() {
+    beforeEach(function() {
         server = new Server({port: 3000});
     });
 
-    after(function(done) {
+    afterEach(function(done) {
         server.close();
         setTimeout(function() {
             done();
@@ -107,7 +112,7 @@ describe('WebSocketServer:PUB/SUB', function() {
     });
 
     it('should remove an existing channel', function() {
-        server = server.removeChannel('test:echo');
+        server = server.addChannel('test:echo').removeChannel('test:echo');
         expect(server).to.be.an.instanceof(Server);
         expect(server.channels).to.be.deep.equal({});
     });
@@ -133,43 +138,51 @@ describe('WebSocketServer:PUB/SUB', function() {
     });
 
     it('should publish to an existing channel', function(done) {
+        this.timeout(10000);
+
+        server.addChannel('test:$inge', {ack: true});
         expect(server.channels['test:$inge']).to.be.ok;
 
         var ws = new WebSocket('ws://localhost:3000');
 
-        var spyB = null;
         function onopen() {
-            function onmessage(data) {
-                try {
-                    data = JSON.parse(data);
-                } catch (err) {
-                    done(err);
-                }
+            ws.send(JSON.stringify(['SUB', 'test:$inge', 4327, {ack: true}]));
 
-                console.log(data);
-                switch (data[0]) {
-                    case 'PUB':
-                        expect(data).to.be.deep.equal(['PUB', 'test:$inge', 2743, {}, 'hello $inge']);
-                        break;
-                    case 'ACK':
-                        expect(data).to.be.deep.equal(['ACK', 'test:$inge', 2743, {}, true]);
-                        break;
-                    default:
-                        done(new Error('Invalid message response!'));
-                }
-            }
-            spyB = chai.spy(onmessage);
-            ws.on('message', spyB);
-
-            ws.send(JSON.stringify(['PUB', 'test:$inge', 2743, {}, 'hello $inge']));
+            setTimeout(function() {
+                ws.send(JSON.stringify(['PUB', 'test:$inge', 2743, {ack: true}, 'hello $inge']));
+            }, 500);
         }
 
-        var spyA = chai.spy(onopen);
+        function onmessage(data) {
+            try {
+                data = JSON.parse(data);
+            } catch (err) {
+                done(err);
+            }
+
+            logger.info('Received socket data: %j', data);
+            if (data[0] === 'ACK' && data[2] === 4327) {
+                logger.debug('Call 1');
+                expect(data).to.be.deep.equal(['ACK', 'test:$inge', 4327, {}, true]);
+            } else if (data[0] === 'PUB') {
+                logger.debug('Call 2');
+                expect(data).to.be.deep.equal(['PUB', 'test:$inge', 2743, {}, 'hello $inge']);
+            } else if (data[0] === 'ACK' && data[2] === 2743) {
+                logger.debug('Call 3');
+                expect(data).to.be.deep.equal(['ACK', 'test:$inge', 2743, {}, true]);
+            } else {
+                done(new Error('Invalid response!'));
+            }
+        }
+
+        var spyA = chai.spy(onopen)
+            , spyB = chai.spy(onmessage);
         ws.on('open', spyA);
+        ws.on('message', spyB);
 
         setTimeout(function() {
             expect(spyA).to.have.been.called.once;
-            expect(spyB).to.have.been.called.twice;
+            expect(spyB).to.have.been.called.exactly(3);
             ws.close();
             done();
         }, 2000);

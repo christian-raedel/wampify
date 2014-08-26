@@ -198,3 +198,52 @@ describe('Wampify:PUB/SUB', function() {
         }, 1000);
     });
 });
+
+describe('Wampify:Use', function() {
+    this.timeout(3000);
+
+    var server = null;
+
+    beforeEach(function() {
+        server = new Wampify({port: 3000});
+    });
+
+    afterEach(function(done) {
+        server.close();
+        setTimeout(function() {
+            done();
+        }, 500);
+    });
+
+    it('should use middleware', function(done) {
+        server.registerRPC('echo', function(args) { return [args]; }).use(function(socket, message) {
+            logger.debug('Middleware 1');
+            message[2]++;
+            return message;
+        }).use(function(socket, message, next) {
+            logger.debug('Middleware 2');
+            message[3].setByMiddleWare = true;
+            return message;
+        });
+
+        server.on('error', function(err) {
+            done(err);
+        });
+
+        ws = new WebSocket('ws://localhost:3000');
+        ws.on('open', function() {
+            var message = ['RPC', 'echo', 1, {}, 2];
+            ws.send(JSON.stringify(message));
+        });
+
+        ws.on('message', function(data) {
+            var message = JSON.parse(data);
+            expect(message[2]).to.be.equal(2);
+            expect(message[3].setByMiddleWare).to.be.true;
+            ws.close();
+            setTimeout(function() {
+                done();
+            }, 500);
+        });
+    });
+});

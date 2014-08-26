@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/christian-raedel/wampify.svg?branch=master)](https://travis-ci.org/christian-raedel/wampify)
+
 # Wampify #
 
 A [node.js](http://nodejs.org) [WAMP](http://wamp.ws)-style RPC & Publish/Subscribe

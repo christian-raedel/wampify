@@ -9,7 +9,7 @@ var _ = require('lodash')
 
 chai.use(spies);
 
-var logger = new CLogger('tests');
+var logger = new CLogger({name: 'tests'});
 
 describe('Wampify', function() {
     it('should instanciates', function(done) {

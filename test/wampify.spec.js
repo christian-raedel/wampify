@@ -11,63 +11,80 @@ chai.use(spies);
 
 var logger = new CLogger({name: 'tests'});
 
-describe('Wampify', function() {
-    it('should instanciates', function(done) {
+describe('Wampify', function () {
+    it('should instanciates', function (done) {
         this.timeout(2000);
 
         var server = new Wampify({port: 3000});
         expect(server).to.be.an.instanceof(Wampify);
 
-        setTimeout(function() {
+        setTimeout(function () {
             server.close();
             done();
         }, 500);
     });
+
+    it('should listen on a path', function (done) {
+        var server = new Wampify({
+            name: 'path-test-server',
+            port: 3000,
+            path: '/ws/inge'
+        });
+
+        expect(server).to.be.an.instanceof(Wampify);
+
+        var ws = new WebSocket('ws://localhost:3000/ws/inge');
+        ws.on('open', function () {
+            ws.close();
+            server.close();
+            done();
+        });
+    });
 });
 
-describe('Wampify:RPC', function() {
+describe('Wampify:RPC', function () {
     this.timeout(3000);
 
     var server = null;
 
-    beforeEach(function() {
+    beforeEach(function () {
         server = new Wampify({
             port: 3000,
             plugins: path.resolve(process.cwd(), 'lib/rprocs')
         });
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
         server.close();
-        setTimeout(function() {
+        setTimeout(function () {
             done();
         }, 500);
     });
 
-    it('should load plugins', function() {
+    it('should load plugins', function () {
         server.loadPlugins();
         expect(server.rprocs['tests:echo']).to.be.a.function;
     });
 
-    it('should register new RPC functions', function() {
-        server.registerRPC('tests:echo', function(message) { return [message]; });
+    it('should register new RPC functions', function () {
+        server.registerRPC('tests:echo', function (message) { return [message]; });
         expect(server.rprocs['tests:echo']).to.be.a.function;
     });
 
-    it('should unregister a RPC function', function() {
-        server.registerRPC('tests:echo', function() {}).unregisterRPC('tests:echo');
+    it('should unregister a RPC function', function () {
+        server.registerRPC('tests:echo', function () {}).unregisterRPC('tests:echo');
         expect(server.rprocs['tests:echo']).to.be.not.a.function;
     });
 
-    it('should execute a RPC function', function(done) {
+    it('should execute a RPC function', function (done) {
         server.loadPlugins();
 
         var ws = new WebSocket('ws://localhost:3000')
             , message = ['RPC', 'test:echo', 4327, {}, 'hello $inge!'];
-        ws.on('open', function() {
+        ws.on('open', function () {
             ws.send(JSON.stringify(message));
         });
-        ws.on('message', function(data) {
+        ws.on('message', function (data) {
             try {
                 data = JSON.parse(data);
             } catch (err) {
@@ -100,23 +117,23 @@ describe('Wampify:RPC', function() {
     });
 });
 
-describe('Wampify:PUB/SUB', function() {
+describe('Wampify:PUB/SUB', function () {
     this.timeout(3000);
 
     var server = null;
 
-    beforeEach(function() {
+    beforeEach(function () {
         server = new Wampify({port: 3000});
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
         server.close();
-        setTimeout(function() {
+        setTimeout(function () {
             done();
         }, 500);
     });
 
-    it('should add a new channel', function() {
+    it('should add a new channel', function () {
         server = server.addChannel('test:echo', {ack: true});
         expect(server).to.be.an.instanceof(Wampify);
         expect(server.channels).to.be.deep.equal({
@@ -129,21 +146,21 @@ describe('Wampify:PUB/SUB', function() {
         });
     });
 
-    it('should remove an existing channel', function() {
+    it('should remove an existing channel', function () {
         server = server.addChannel('test:echo').removeChannel('test:echo');
         expect(server).to.be.an.instanceof(Wampify);
         expect(server.channels).to.be.deep.equal({});
     });
 
-    it('should subscribe to an existing channel', function(done) {
+    it('should subscribe to an existing channel', function (done) {
         server.addChannel('test:$inge', {ack: true});
 
         var ws = new WebSocket('ws://localhost:3000')
             , message = ['SUB', 'test:$inge', 2743, {ack: true}];
-        ws.on('open', function() {
+        ws.on('open', function () {
             ws.send(JSON.stringify(message));
         });
-        ws.on('message', function(data) {
+        ws.on('message', function (data) {
             try {
                 data = JSON.parse(data);
             } catch(err) {
@@ -155,7 +172,7 @@ describe('Wampify:PUB/SUB', function() {
         });
     });
 
-    it('should publish to an existing channel', function(done) {
+    it('should publish to an existing channel', function (done) {
         this.timeout(10000);
 
         server.addChannel('test:$inge', {ack: true});
@@ -169,7 +186,7 @@ describe('Wampify:PUB/SUB', function() {
         function onopen() {
             ws.send(JSON.stringify(['SUB', 'test:$inge', 4327, {}]));
 
-            setTimeout(function() {
+            setTimeout(function () {
                 ws.send(JSON.stringify(['PUB', 'test:$inge', i++, {ack: true}, 'hello $inge']));
             }, 500);
         }
@@ -209,7 +226,7 @@ describe('Wampify:PUB/SUB', function() {
         ws2.on('open', spyA);
         ws2.on('message', spyB);
 
-        setTimeout(function() {
+        setTimeout(function () {
             expect(spyA).to.have.been.called.twice;
             expect(spyB).to.have.been.called.exactly(6);
             ws.close();
@@ -231,49 +248,49 @@ describe('Wampify:PUB/SUB', function() {
     });
 });
 
-describe('Wampify:Use', function() {
+describe('Wampify:Use', function () {
     this.timeout(3000);
 
     var server = null;
 
-    beforeEach(function() {
+    beforeEach(function () {
         server = new Wampify({port: 3000});
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
         server.close();
-        setTimeout(function() {
+        setTimeout(function () {
             done();
         }, 500);
     });
 
-    it('should use middleware', function(done) {
-        server.registerRPC('echo', function(args) { return [args]; }).use(function(socket, message) {
+    it('should use middleware', function (done) {
+        server.registerRPC('echo', function (args) { return [args]; }).use(function (socket, message) {
             logger.debug('Middleware 1');
             message[2]++;
             return message;
-        }).use(function(socket, message, next) {
+        }).use(function (socket, message, next) {
             logger.debug('Middleware 2');
             message[3].setByMiddleWare = true;
             return message;
         });
 
-        server.on('error', function(err) {
+        server.on('error', function (err) {
             done(err);
         });
 
         ws = new WebSocket('ws://localhost:3000');
-        ws.on('open', function() {
+        ws.on('open', function () {
             var message = ['RPC', 'echo', 1, {}, 2];
             ws.send(JSON.stringify(message));
         });
 
-        ws.on('message', function(data) {
+        ws.on('message', function (data) {
             var message = JSON.parse(data);
             expect(message[2]).to.be.equal(2);
             expect(message[3].setByMiddleWare).to.be.true;
             ws.close();
-            setTimeout(function() {
+            setTimeout(function () {
                 done();
             }, 500);
         });

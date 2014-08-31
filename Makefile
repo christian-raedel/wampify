@@ -7,6 +7,8 @@ install:
 	@npm install
 
 test:
+	@cat .dev-logo
+	@echo
 	@echo "************************"
 	@echo "* TEST LIBRARY         *"
 	@echo "************************"
@@ -16,7 +18,7 @@ docs:
 	@echo "************************"
 	@echo "* CREATE DOCUMENTATION *"
 	@echo "************************"
-	@./node_modules/.bin/jsdoc --recurse --destination ./doc lib/*.js lib/rprocs/*.js README.md
+	@./node_modules/.bin/jsdoc --recurse --private --destination ./doc lib/*.js lib/rprocs/*.js README.md
 
 github.io:
 	@echo "************************"

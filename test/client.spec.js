@@ -19,12 +19,12 @@ describe('Client:Constructor', function () {
             name: 'wampify-test-server',
             port: 3000
         });
-        setTimeout(function() { done(); }, 500);
+        setTimeout(function () { done(); }, 500);
     });
 
     afterEach(function (done) {
         server.close();
-        setTimeout(function() { done(); }, 500);
+        setTimeout(function () { done(); }, 500);
     });
 
     it('should instanciate', function () {
@@ -49,16 +49,16 @@ describe('Client:RPC', function () {
             name: 'wampify-test-server',
             port: 3000
         });
-        setTimeout(function() { done(); }, 500);
+        setTimeout(function () { done(); }, 500);
     });
 
     afterEach(function (done) {
         server.close();
-        setTimeout(function() { done(); }, 500);
+        setTimeout(function () { done(); }, 500);
     });
 
     it('should call a remote procedure', function (done) {
-        server.registerRPC('echo', function(args) { return [args]; });
+        server.registerRPC('echo', function (args) { return [args]; });
 
         var client = new Client({url: 'ws://localhost:3000'});
         client.call('echo', {}, 43).then(function (args) {
@@ -72,7 +72,7 @@ describe('Client:RPC', function () {
 
         var client = new Client({url: 'ws://localhost:3000'});
         client.call('error', {}, 'hello $inge!')
-        .catch(function(reason) {
+        .catch(function (reason) {
             expect(reason).to.be.equal('hello $inge!');
             done();
         });
@@ -87,7 +87,7 @@ describe('Client:PUB/SUB', function () {
             name: 'wampify-test-server',
             port: 3000
         });
-        setTimeout(function() {
+        setTimeout(function () {
             client = new Client({
                 name: 'wampify-test-client',
                 url: 'ws://localhost:3000'
@@ -99,7 +99,7 @@ describe('Client:PUB/SUB', function () {
     after(function (done) {
         client.close();
         server.close();
-        setTimeout(function() { done(); }, 500);
+        setTimeout(function () { done(); }, 500);
     });
 
     it('should subscribe to a channel', function (done) {
@@ -130,7 +130,7 @@ describe('Client:PUB/SUB', function () {
         client.on('channel', spyA);
         client.on('channel:$inge', spyB);
 
-        client.publish('$inge', {}, 'dlc').then(function(sent) {
+        client.publish('$inge', {}, 'dlc').then(function (sent) {
             setTimeout(function () {
                 logger.info('onAfterSent');
                 expect(sent).to.be.true;

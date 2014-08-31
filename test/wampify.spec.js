@@ -78,6 +78,26 @@ describe('Wampify:RPC', function() {
             done();
         });
     });
+
+    it('should pass-through errors from remote procedures', function (done) {
+        server.registerRPC('tests:$error', function (args) { throw new Error(args); });
+
+        var ws = new WebSocket('ws://localhost:3000')
+            , message = ['RPC', 'tests:$error', 4327, {}, 'hello $inge!'];
+        ws.on('open', function () {
+            ws.send(JSON.stringify(message));
+        });
+        ws.on('message', function (data) {
+            try {
+                data = JSON.parse(data);
+            } catch (err) {
+                done(err);
+            }
+            expect(data).to.be.deep.equal(['ERR', 'tests:$error', 4327, {}, 'hello $inge!']);
+            ws.close();
+            done();
+        });
+    });
 });
 
 describe('Wampify:PUB/SUB', function() {
@@ -129,7 +149,7 @@ describe('Wampify:PUB/SUB', function() {
             } catch(err) {
                 done(err);
             }
-            expect(data).to.be.deep.equal(['ACK', 'test:$inge', 2743, {}, true]);
+            expect(data).to.be.deep.equal(['SUB', 'test:$inge', 2743, {}, true]);
             ws.close();
             done();
         });
@@ -147,7 +167,7 @@ describe('Wampify:PUB/SUB', function() {
             , i = 2743;
 
         function onopen() {
-            ws.send(JSON.stringify(['SUB', 'test:$inge', 4327, {ack: true}]));
+            ws.send(JSON.stringify(['SUB', 'test:$inge', 4327, {}]));
 
             setTimeout(function() {
                 ws.send(JSON.stringify(['PUB', 'test:$inge', i++, {ack: true}, 'hello $inge']));
@@ -162,9 +182,9 @@ describe('Wampify:PUB/SUB', function() {
             }
 
             logger.info('Received socket data: %j', data);
-            if (data[0] === 'ACK' && data[2] === 4327) {
+            if (data[0] === 'SUB' && data[2] === 4327) {
                 logger.debug('Call 1');
-                expect(data).to.be.deep.equal(['ACK', 'test:$inge', 4327, {}, true]);
+                expect(data).to.be.deep.equal(['SUB', 'test:$inge', 4327, {}, true]);
             } else if (data[0] === 'PUB' && data[2] === 2743) {
                 logger.debug('Call 2.1');
                 expect(data).to.be.deep.equal(['PUB', 'test:$inge', 2743, {}, 'hello $inge']);
@@ -196,6 +216,18 @@ describe('Wampify:PUB/SUB', function() {
             ws2.close();
             done();
         }, 1000);
+    });
+
+    it('should response with an error, when publishing to a non-existing channel', function (done) {
+        var ws = new WebSocket('ws://localhost:3000');
+        ws.on('open', function () {
+            ws.send(JSON.stringify(['PUB', 'tests:$global', 4327, {}, 'hello $inge']));
+        });
+        ws.on('message', function (data) {
+            data = JSON.parse(data);
+            expect(data.slice(0, -1)).to.be.deep.equal(['ERR', 'tests:$global', 4327, {}]);
+            done();
+        });
     });
 });
 

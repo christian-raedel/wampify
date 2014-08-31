@@ -21,6 +21,8 @@ ws.on('open', function() {
             var unsubscription = JSON.stringify(['UNSUB', 'example:$inge', 125, {ack: true}]);
             ws.send(unsubscription);
             clearInterval(intervalId);
+            ws.close();
+            process.exit(0);
         }
     }, 500);
 });

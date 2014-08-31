@@ -1,10 +1,10 @@
 var _ = require('lodash')
-    , clogger = require('node-clogger')
-    , Wampify = require('../lib/wampify');
+    , CLogger = require('node-clogger')
+    , Wampify = require('../index');
 
 var server = new Wampify({
     port: 3000,
-    logger: new clogger.CLogger('websocket-server', {visible: ['info', 'warn', 'error']})
+    logger: new CLogger({ name: 'websocket-server', visible: ['info', 'warn', 'error']})
 })
 .registerRPC('example:add', function() {
     var args = _.toArray(arguments);

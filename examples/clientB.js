@@ -13,5 +13,6 @@ ws.on('open', function() {
         }
 
         ws.close();
+        process.exit(0);
     }, 14000);
 });

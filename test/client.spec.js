@@ -88,7 +88,10 @@ describe('Client:PUB/SUB', function () {
             port: 3000
         });
         setTimeout(function() {
-            client = new Client({url: 'ws://localhost:3000'});
+            client = new Client({
+                name: 'wampify-test-client',
+                url: 'ws://localhost:3000'
+            });
             done();
         }, 500);
     });
